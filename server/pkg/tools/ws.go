@@ -12,30 +12,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/patnaikankit/Code-Cloud/server/pkg/models"
 )
 
-type Command struct {
-	Directory string `json:"directory"`
-	Command   string `json:"command"`
-	Type      string `json:"type"`
-	Data      string `json:"data"`
-	IsFile    string `json:"isFile"`
-}
-
-type Output struct {
-	OldDirectory string `json:"oldDirectory"`
-	Directory    string `json:"directory"`
-	Output       string `json:"ouput"`
-	Error        string `json:"error"`
-	Type         string `json:"typ"`
-	IsFile       string `json:"isFile"`
-	Command      string `json:"command"`
-}
-
+// to send data and execute commands in container
 func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
+	// retrieve conatiner data
 	imageID := strings.Split(ctx.Request.Host, ".")[0]
 
-	containerData, err := ReadContainersData()
+	containerData, err := ReadContainerData()
 	if err != nil {
 		ctx.JSON(500, gin.H{
 			"message": "Error reading conatiner data!",
@@ -51,6 +36,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 		})
 	}
 
+	// upgrading the connection to websocket from http
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, http.Header{
 		"Access-Control-Allow-Origin": []string{"*"},
 	})
@@ -63,17 +49,19 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 	fmt.Println("Websocket Connection Established")
 
 	for {
-		messageType, p, err := conn.ReadMessage()
+		// receiving signals from client
+		messageType, payload, err := conn.ReadMessage()
 		if err != nil {
 			return false
 		}
 
-		var command Command
-		var output Output
+		var command models.Command
+		var output models.Output
 
-		execCommand := string(p)
+		execCommand := string(payload)
 		json.Unmarshal([]byte(execCommand), &command)
 		var cmd *exec.Cmd
+		// write operation
 		if command.Data != "" {
 			err := WriteFileToContainer(containerInfo.ContainerID, imageID, filepath.Join(command.Directory, command.IsFile), command.Data)
 
@@ -81,7 +69,10 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 				output.Error = fmt.Sprintf("Error writing file to conatiner: %v\n", err)
 			}
 		} else {
+			// command execution inside container
 			cmd = exec.Command("docker", "exec", containerInfo.ContainerID, "sh", "-c", "cd"+command.Directory+"&& "+command.Command)
+
+			// to store the output of the executed command
 			var stdout bytes.Buffer
 			cmd.Stdout = &stdout
 			cmd.Stdin = os.Stdin
@@ -126,6 +117,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 	}
 }
 
+// retrieve the directory path
 func getPwd(containerID string, dir string, cmd string) (string, error) {
 	pwd, err := exec.Command("docker", "exec", containerID, "sh", "-c", "cd"+dir+"&& "+cmd+" && pwd").Output()
 	return string(pwd), err
