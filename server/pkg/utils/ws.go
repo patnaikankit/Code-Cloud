@@ -63,7 +63,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 		var cmd *exec.Cmd
 		// write operation
 		if command.Data != "" {
-			err := WriteFileToContainer(containerInfo.ContainerID, imageID, filepath.Join(command.Directory, command.IsFile), command.Data)
+			err := WriteToContainer(containerInfo.ContainerID, imageID, filepath.Join(command.Directory, command.IsFile), command.Data)
 
 			if err != nil {
 				output.Error = fmt.Sprintf("Error writing file to conatiner: %v\n", err)

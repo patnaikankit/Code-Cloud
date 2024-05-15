@@ -58,7 +58,7 @@ func WriteFile(data ContainerMap) error {
 }
 
 // retrieve container data
-func CreateContainer(imageName string, conatinerID string, port int) (string, error) {
+func FetchContainerData(imageName string, conatinerID string, port int) (string, error) {
 	data, err := ReadContainerData()
 	if err != nil {
 		return "", err

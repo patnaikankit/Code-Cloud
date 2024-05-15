@@ -3,14 +3,60 @@
 package tools
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
+// create and start the container
+func CreateContainer(rootDir string, stack string, imageName string) (string, int, error) {
+	// location where the dockerfile will be copied
+	code := ""
+	hostPort := FetchPort(8080)
+
+	if rootDir == "" {
+		code = "./tmp/" + imageName
+	} else {
+		code = "./tmp/" + imageName + "/" + rootDir
+	}
+
+	image := imageName + ":latest"
+
+	err := exec.Command("cp", "./pkg/dockerFiles/"+stack+"/Dockerfile", code).Run()
+	if err != nil {
+		return "", 0, err
+	}
+
+	// build image
+	err = exec.Command("docker", "build", "-t", image, code).Run()
+	if err != nil {
+		fmt.Println("building", err)
+		return "", 0, err
+	}
+
+	// build container
+	createCmd := exec.Command("docker", "create", "--name", imageName, "-p", strconv.Itoa(hostPort)+":3000", image)
+	output, err := createCmd.CombinedOutput()
+	if err != nil {
+		return "", 0, err
+	}
+
+	conatainerID := string(bytes.TrimSpace(output))
+
+	startCmd := exec.Command("docker", "start", conatainerID)
+	_, err = startCmd.CombinedOutput()
+	if err != nil {
+		return "", 0, err
+	}
+
+	return conatainerID, hostPort, nil
+}
+
 // transfer data from host file system to the docker container
-func WriteFileToContainer(containerID string, imageID string, filePath, data string) error {
+func WriteToContainer(containerID string, imageID string, filePath, data string) error {
 	// temporarily storing the file in the host's file system
 	newFilePath := "./fileTemp" + imageID + filePath
 	elements := strings.Split(newFilePath, "/")

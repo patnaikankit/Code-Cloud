@@ -6,7 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/patnaikankit/Code-Cloud/server/pkg/tools"
+	tools "github.com/patnaikankit/Code-Cloud/server/pkg/utils"
 )
 
 func main() {
