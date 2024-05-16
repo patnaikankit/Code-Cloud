@@ -1,13 +1,28 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/patnaikankit/Code-Cloud/server/pkg/routes"
 	tools "github.com/patnaikankit/Code-Cloud/server/pkg/utils"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 func main() {
 	var timer time.Timer
@@ -23,13 +38,46 @@ func main() {
 
 	router.GET("/*any", func(ctx *gin.Context) {
 		if ctx.Request.URL.Path == "/ws" {
-			done := tools.EstablishWS(ctx, &websocket.Upgrader{})
+			done := tools.EstablishWS(ctx, &upgrader)
 			if !done {
 				ctx.JSON(500, gin.H{
 					"message": "Error reading container data",
 				})
 			}
 		}
+
+		imageID := strings.Split(ctx.Request.Host, ".")[0]
+
+		containerData, err := tools.ReadContainerData()
+		if err != nil {
+			ctx.JSON(500, gin.H{
+				"message": "Error reading container data",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		containerInfo, temp := containerData[imageID]
+		if !temp {
+			ctx.JSON(404, gin.H{
+				"message": "Container Not Found",
+			})
+		}
+
+		serverURL := "http://localhost:" + strconv.Itoa(containerInfo.Port)
+		internalServer, err := url.Parse(serverURL)
+		if err != nil {
+			fmt.Println("Error parsing internal server URL -> ", err)
+			return
+		}
+
+		httpProxy := httputil.NewSingleHostReverseProxy(internalServer)
+
+		httpProxy.ServeHTTP(ctx.Writer, ctx.Request)
 	})
 
+	routes.Server(router)
+
+	fmt.Println("Server started at port 5000")
+	router.Run(":5000")
 }
