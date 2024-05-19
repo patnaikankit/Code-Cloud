@@ -35,7 +35,7 @@ export const useFiles = () => {
     const context = useContext(FileUtils)
 
     if(!context){
-        throw new Error('Use files must be within a files provider')
+        throw new Error('useFiles must be within a filesProvider')
     }
 
     return context

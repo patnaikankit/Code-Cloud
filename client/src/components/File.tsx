@@ -1,4 +1,8 @@
 import { useState } from "react"
+import { useFiles } from "../utils/FIleUtil"
+import { useWebsocket } from "../utils/WSutil"
+import { MdDelete } from "react-icons/md"
+
 
 interface FileProps {
     path: string
@@ -6,6 +10,8 @@ interface FileProps {
 
 const File: React.FC<FileProps> = ({path}) => {
     const [folderHover, setFolderHover] = useState(false)
+    const { getFile, sendMessage } = useWebsocket()
+    const { removeFile } = useFiles()
 
     const deleteFile = () => {
         const cmd = {
@@ -18,6 +24,8 @@ const File: React.FC<FileProps> = ({path}) => {
             type: 'files',
             isFile: ''
         }
+        sendMessage(JSON.stringify(cmd))
+        removeFile(path)
     }
 
     return(
@@ -30,9 +38,24 @@ const File: React.FC<FileProps> = ({path}) => {
         }}>
             <p
                 onClick={() => {
-                    
+                    getFile(path)
                 }}
-            ></p>
+            >{
+                path
+                    .split('/')
+                    .filter((e) => e !== '')
+                    .pop()
+            }</p>
+            {folderHover && (
+                <MdDelete 
+                className="text-white text-lg cursor-pointer absolute right-0 top-[0.2rem]"
+                size={'0.8rem'}
+                onClick={deleteFile}
+            />
+            )
+            }
         </li>
     );
 }
+
+export default File;
