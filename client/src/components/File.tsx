@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useFiles } from "../utils/FIleUtil"
+import { useFiles } from "../utils/FileUtil"
 import { useWebsocket } from "../utils/WSutil"
 import { MdDelete } from "react-icons/md"
 
