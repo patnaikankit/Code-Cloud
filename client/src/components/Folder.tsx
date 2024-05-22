@@ -1,7 +1,7 @@
 // folder interface
 
 import React, { useState } from "react"
-import { useFiles } from "../utils/FIleUtil"
+import { useFiles } from "../utils/FileUtil"
 import { useWebsocket } from "../utils/WSutil"
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io"
 import { BiPlus } from "react-icons/bi"

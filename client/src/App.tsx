@@ -1,12 +1,12 @@
 import './App.css'
+import { BrowserRouter } from 'react-router-dom'
+import RoutesContainer from './helpers/Routes'
 
 function App() {
-
-
   return (
-    <>
-      <h1>Hello</h1>
-    </>
+    <BrowserRouter>
+      <RoutesContainer />
+    </BrowserRouter>
   )
 }
 
