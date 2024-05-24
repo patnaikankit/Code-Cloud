@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar"
 const Home = () => {
     const [gitLink,setGitLink] = useState('')
     const [rootDir, setRootDir] = useState('')
+    // tech stack
     const [stack, setStack] = useState('nextjs')
     const [isLoading, setIsLoading] = useState(false)
     const Navigate = useNavigate()

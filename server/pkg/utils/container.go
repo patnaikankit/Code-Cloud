@@ -7,13 +7,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/otiai10/copy"
 )
 
 // create and start the container
-func CreateContainer(rootDir string, stack string, imageName string) (string, int, error) {
-	// location where the dockerfile will be copied
+func CreateContainer(rootDir, stack, imageName string) (string, int, error) {
 	code := ""
 	hostPort := FetchPort(8080)
 
@@ -25,40 +27,53 @@ func CreateContainer(rootDir string, stack string, imageName string) (string, in
 
 	image := imageName + ":latest"
 
-	err := exec.Command("cp", "./pkg/dockerFiles/"+stack+"/Dockerfile", code).Run()
+	fmt.Println(image)
+
+	dockerfilePath := "../pkg/docker/" + stack + "/Dockerfile"
+	destinationPath := filepath.Join(code, "Dockerfile")
+
+	err := copy.Copy(dockerfilePath, destinationPath)
 	if err != nil {
+		fmt.Println("Error copying Dockerfile:", err)
 		return "", 0, err
 	}
 
-	// build image
-	err = exec.Command("docker", "build", "-t", image, code).Run()
+	// Build the Docker image
+	buildCmd := exec.Command("docker", "build", "-t", image, code)
+	buildOutput, err := buildCmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("building", err)
+		fmt.Println("Error building Docker image:", string(buildOutput), err)
 		return "", 0, err
 	}
+	fmt.Println("Build output:", string(buildOutput))
 
-	// build container
+	// Create the Docker container
 	createCmd := exec.Command("docker", "create", "--name", imageName, "-p", strconv.Itoa(hostPort)+":3000", image)
-	output, err := createCmd.CombinedOutput()
+	createOutput, err := createCmd.CombinedOutput()
 	if err != nil {
+		fmt.Println("Error creating Docker container:", string(createOutput), err)
 		return "", 0, err
 	}
+	fmt.Println("Create output:", string(createOutput))
 
-	conatainerID := string(bytes.TrimSpace(output))
+	containerID := string(bytes.TrimSpace(createOutput))
 
-	startCmd := exec.Command("docker", "start", conatainerID)
-	_, err = startCmd.CombinedOutput()
+	// Start the Docker container
+	startCmd := exec.Command("docker", "start", containerID)
+	startOutput, err := startCmd.CombinedOutput()
 	if err != nil {
+		fmt.Println("Error starting Docker container:", string(startOutput), err)
 		return "", 0, err
 	}
+	fmt.Println("Start output:", string(startOutput))
 
-	return conatainerID, hostPort, nil
+	return containerID, hostPort, nil
 }
 
 // transfer data from host file system to the docker container
 func WriteToContainer(containerID string, imageID string, filePath, data string) error {
 	// temporarily storing the file in the host's file system
-	newFilePath := "./fileTemp" + imageID + filePath
+	newFilePath := "./fileTmp" + imageID + filePath
 	elements := strings.Split(newFilePath, "/")
 
 	if len(elements) > 0 {

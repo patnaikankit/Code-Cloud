@@ -3,6 +3,7 @@
 package controllers
 
 import (
+	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,8 @@ func GitClone(ctx *gin.Context) {
 	rootDir := ctx.Query("root-dir")
 	stack := ctx.Query("stack")
 	newRepo := uuid.New().String()
+
+	log.Printf("Cloning repository with the following parameters:\nRoot Directory: %s\nStack: %s\nNew Repo ID: %s\n", rootDir, stack, newRepo)
 
 	// clone the repo in a temporary directory
 	git.PlainClone("./tmp/"+newRepo, false, &git.CloneOptions{
