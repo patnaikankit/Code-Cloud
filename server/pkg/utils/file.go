@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/patnaikankit/Code-Cloud/server/pkg/models"
@@ -83,7 +84,16 @@ func FetchContainerData(imageName string, conatinerID string, port int) (string,
 func FetchPort(port int) int {
 	for {
 		port++
-		cmd := exec.Command("sudo", "lsof", "-i", "tcp:"+strconv.Itoa(port))
+		var cmd *exec.Cmd
+
+		if runtime.GOOS == "windows" {
+			// Windows command to check if the port is in use
+			cmd = exec.Command("netstat", "-an", "|", "findstr", ":"+strconv.Itoa(port))
+		} else {
+			// Unix for linux or mac command to check if the port is in use
+			cmd = exec.Command("lsof", "-i", "tcp:"+strconv.Itoa(port))
+		}
+
 		err := cmd.Run()
 		if err != nil {
 			break

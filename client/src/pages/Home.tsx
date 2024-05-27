@@ -16,7 +16,7 @@ const Home = () => {
             const response = await fetch(`http://localhost:5000/api/git/clone?git-link=${gitLink}&root-dir=${rootDir}&stack=${stack}`,{
                 method: 'POST',
                 headers: {
-                    'content-Type': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: ''
             })
