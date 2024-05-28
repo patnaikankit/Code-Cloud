@@ -21,6 +21,10 @@ const Home = () => {
                 body: ''
             })
 
+            if(!response.ok){
+                throw new Error('Failed to clone the repository');
+            }
+
             const data = await response.json()
             Navigate(`/${data.repo}`, { replace: false })
         }

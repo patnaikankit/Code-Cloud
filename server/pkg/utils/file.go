@@ -18,7 +18,7 @@ type ContainerMap map[string]models.ContainerInfo
 
 // to parse the json data
 func ReadContainerData() (ContainerMap, error) {
-	absContextDirectory, err := filepath.Abs("./data/containers.info.json")
+	absContextDirectory, err := filepath.Abs("../data/containers.info.json")
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func ReadContainerData() (ContainerMap, error) {
 
 // to write data to the json file
 func WriteFile(data ContainerMap) error {
-	absContextDirectory, err := filepath.Abs("./data/containers.info.json")
+	absContextDirectory, err := filepath.Abs("../data/containers.info.json")
 	if err != nil {
 		return err
 	}

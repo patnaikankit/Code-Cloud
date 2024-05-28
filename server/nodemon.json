@@ -1,7 +1,0 @@
-{
-    "watch": ["pkg", "internal", "cmd"],
-    "ext": "go",
-    "ignore": [""],
-    "exec": "go run ./cmd/main.go"
-  }
-  

@@ -1,15 +1,14 @@
-import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import Home from '../pages/Home';
-import Editor from '../pages/Editor';
+import { Route, Routes } from 'react-router-dom'
+import Home from '../pages/Home'
+import Editor from '../pages/Editor'
 
-const RoutesContainer: React.FC = () => {
+const RoutesContainer = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/:id" element={<Editor />} />
+      <Route path="/" Component={Home} />
+      <Route path="/:id" Component={Editor} />
     </Routes>
-  );
+  )
 }
 
-export default RoutesContainer;
+export default RoutesContainer
