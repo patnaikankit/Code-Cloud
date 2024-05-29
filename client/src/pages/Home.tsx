@@ -21,12 +21,15 @@ const Home = () => {
                 body: ''
             })
 
-            if(!response.ok){
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Response Error:', errorText);
                 throw new Error('Failed to clone the repository');
             }
-
-            const data = await response.json()
-            Navigate(`/${data.repo}`, { replace: false })
+    
+            const data = await response.json();
+            console.log('Response Data:', data);
+            Navigate(`/${data.repo}`, { replace: false });
         }
         catch(err){
             console.error(err)

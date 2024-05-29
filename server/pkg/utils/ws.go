@@ -17,13 +17,13 @@ import (
 
 // to send data and execute commands in container
 func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
-	// retrieve conatiner data
+	// retrieve container data
 	imageID := strings.Split(ctx.Request.Host, ".")[0]
 
 	containerData, err := ReadContainerData()
 	if err != nil {
 		ctx.JSON(500, gin.H{
-			"message": "Error reading conatiner data!",
+			"message": "Error reading container data!",
 			"error":   err.Error(),
 		})
 		return false
@@ -32,8 +32,9 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 	containerInfo, temp := containerData[imageID]
 	if !temp {
 		ctx.JSON(404, gin.H{
-			"message": "Conatiner Not Found!",
+			"message": "Container Not Found!",
 		})
+		return false
 	}
 
 	// upgrading the connection to websocket from http
@@ -43,6 +44,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 
 	if err != nil {
 		fmt.Println("Error upgrading to websocket: ", err)
+		return false
 	}
 	defer conn.Close()
 
@@ -52,6 +54,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 		// receiving signals from client
 		messageType, payload, err := conn.ReadMessage()
 		if err != nil {
+			conn.Close()
 			return false
 		}
 
@@ -66,11 +69,11 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 			err := WriteToContainer(containerInfo.ContainerID, imageID, filepath.Join(command.Directory, command.IsFile), command.Data)
 
 			if err != nil {
-				output.Error = fmt.Sprintf("Error writing file to conatiner: %v\n", err)
+				output.Error = fmt.Sprintf("Error writing file to container: %v\n", err)
 			}
 		} else {
 			// command execution inside container
-			cmd = exec.Command("docker", "exec", containerInfo.ContainerID, "sh", "-c", "cd"+command.Directory+"&& "+command.Command)
+			cmd = exec.Command("docker", "exec", containerInfo.ContainerID, "sh", "-c", "cd "+command.Directory+" && "+command.Command)
 
 			// to store the output of the executed command
 			var stdout bytes.Buffer
@@ -78,10 +81,10 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 			cmd.Stdin = os.Stdin
 			cmd.Stderr = os.Stderr
 			if err := cmd.Start(); err != nil {
-				output.Error = fmt.Sprintf("Error starting conatiner: %v\n", err)
+				output.Error = fmt.Sprintf("Error starting container: %v\n", err)
 			}
 			if err := cmd.Wait(); err != nil {
-				output.Error = fmt.Sprintf("Error waiting for conatiner: %v\n", err)
+				output.Error = fmt.Sprintf("Error waiting for container: %v\n", err)
 			}
 			if stdout.Len() > 0 {
 				output.Output = stdout.String()
@@ -111,6 +114,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 			output.IsFile = command.IsFile
 			st, _ := json.Marshal(output)
 			if err := conn.WriteMessage(messageType, st); err != nil {
+				conn.Close()
 				return false
 			}
 		}
@@ -119,6 +123,6 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 
 // retrieve the directory path
 func getPwd(containerID string, dir string, cmd string) (string, error) {
-	pwd, err := exec.Command("docker", "exec", containerID, "sh", "-c", "cd"+dir+"&& "+cmd+" && pwd").Output()
+	pwd, err := exec.Command("docker", "exec", containerID, "sh", "-c", "cd "+dir+" && "+cmd+" && pwd").Output()
 	return string(pwd), err
 }

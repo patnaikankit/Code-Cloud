@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/otiai10/copy"
 )
@@ -28,6 +27,8 @@ func CreateContainer(rootDir, stack, imageName string) (string, int, error) {
 	image := imageName + ":latest"
 
 	fmt.Println(image)
+
+	fmt.Println("-----------------------------------------------------")
 
 	dockerfilePath := "../pkg/docker/" + stack + "/Dockerfile"
 	destinationPath := filepath.Join(code, "Dockerfile")
@@ -72,40 +73,39 @@ func CreateContainer(rootDir, stack, imageName string) (string, int, error) {
 
 // transfer data from host file system to the docker container
 func WriteToContainer(containerID string, imageID string, filePath, data string) error {
-	// temporarily storing the file in the host's file system
-	newFilePath := "./fileTmp" + imageID + filePath
-	elements := strings.Split(newFilePath, "/")
+	// Construct temporary file path in the host's file system.
+	newFilePath := filepath.Join(".", "fileTmp"+imageID, filePath)
+	dirPath := filepath.Dir(newFilePath)
 
-	if len(elements) > 0 {
-		lastIndex := len(elements) - 1
-		elements = elements[:lastIndex]
-	}
-
-	dirPath := strings.Join(elements, "/")
-
-	// make new directory if it doesn't exist
+	// Create directory if it doesn't exist.
 	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		fmt.Println("Error creating directory -> ", err)
 		return err
 	}
 
-	err = os.WriteFile(newFilePath, []byte(data), 6044)
+	// Write data to the temporary file.
+	err = os.WriteFile(newFilePath, []byte(data), 0644)
 	if err != nil {
 		fmt.Println("Error writing file ->", err)
 		return err
 	}
 
-	// copy files from host to container
-	err = exec.Command("docker", "cp", newFilePath, containerID+":"+filePath).Run()
+	// Create a temporary directory for copying.
+	tempDir := filepath.Join(".", "fileTmp"+imageID)
+	defer os.RemoveAll(tempDir)
 
-	// remove the temporary files from host
-	newErr := os.Remove(newFilePath)
-	if newErr != nil {
-		return newErr
+	// Copy the temporary file to the container.
+	hostPath := filepath.Join(tempDir, filePath)
+	err = copy.Copy(hostPath, newFilePath)
+	if err != nil {
+		fmt.Println("Error copying file ->", err)
+		return err
 	}
 
+	err = exec.Command("docker", "cp", newFilePath, containerID+":"+filePath).Run()
 	if err != nil {
+		fmt.Println("Error copying file to container ->", err)
 		return err
 	}
 

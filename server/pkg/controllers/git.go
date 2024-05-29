@@ -3,6 +3,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -35,12 +36,18 @@ func GitClone(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Println("-------------------------------------------------------------")
+	fmt.Println("Container ID:", id)
+	fmt.Println("Container Port:", port)
+
 	_, err = tools.FetchContainerData(newRepo, id, port)
 	if err != nil {
 		ctx.JSON(500, gin.H{
 			"message": "Error creating container",
 			"error":   err.Error(),
 		})
+		fmt.Println("Error fetching container data:", err.Error())
+		return
 	}
 
 	ctx.JSON(200, gin.H{
