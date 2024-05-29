@@ -36,48 +36,58 @@ func main() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-	router.GET("/*any", func(ctx *gin.Context) {
-		if ctx.Request.URL.Path == "/ws" {
-			done := tools.EstablishWS(ctx, &upgrader)
-			if !done {
-				ctx.JSON(500, gin.H{
-					"message": "Error reading container data",
-				})
-			}
-		}
-
-		imageID := strings.Split(ctx.Request.Host, ".")[0]
-
-		containerData, err := tools.ReadContainerData()
-		if err != nil {
-			ctx.JSON(500, gin.H{
-				"message": "Error reading container data",
-				"error":   err.Error(),
-			})
-			return
-		}
-
-		containerInfo, temp := containerData[imageID]
-		if !temp {
-			ctx.JSON(404, gin.H{
-				"message": "Container Not Found",
+	// WebSocket route
+	router.GET("/ws", func(ctx *gin.Context) {
+		done := tools.EstablishWS(ctx, &upgrader)
+		if !done {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Error establishing WebSocket connection",
 			})
 		}
+	})
 
-		serverURL := "http://localhost:" + strconv.Itoa(containerInfo.Port)
-		internalServer, err := url.Parse(serverURL)
-		if err != nil {
-			fmt.Println("Error parsing internal server URL -> ", err)
-			return
-		}
-
-		httpProxy := httputil.NewSingleHostReverseProxy(internalServer)
-
-		httpProxy.ServeHTTP(ctx.Writer, ctx.Request)
+	// Default route for HTTP proxying
+	router.NoRoute(func(ctx *gin.Context) {
+		handleHTTPProxy(ctx)
 	})
 
 	routes.Server(router)
 
 	fmt.Println("Server started at port 5000")
 	router.Run(":5000")
+}
+
+func handleHTTPProxy(ctx *gin.Context) {
+	imageID := strings.Split(ctx.Request.Host, ".")[0]
+
+	containerData, err := tools.ReadContainerData()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error reading container data",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	containerInfo, exists := containerData[imageID]
+	if !exists {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Container Not Found",
+		})
+		return
+	}
+
+	serverURL := "http://localhost:" + strconv.Itoa(containerInfo.Port)
+	internalServer, err := url.Parse(serverURL)
+	if err != nil {
+		fmt.Println("Error parsing internal server URL:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error parsing internal server URL",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	httpProxy := httputil.NewSingleHostReverseProxy(internalServer)
+	httpProxy.ServeHTTP(ctx.Writer, ctx.Request)
 }

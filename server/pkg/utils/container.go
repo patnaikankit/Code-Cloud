@@ -28,7 +28,7 @@ func CreateContainer(rootDir, stack, imageName string) (string, int, error) {
 
 	fmt.Println(image)
 
-	fmt.Println("-----------------------------------------------------")
+	fmt.Println("--------------------------------------------------------------------------------------")
 
 	dockerfilePath := "../pkg/docker/" + stack + "/Dockerfile"
 	destinationPath := filepath.Join(code, "Dockerfile")

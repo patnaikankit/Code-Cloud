@@ -36,9 +36,10 @@ func GitClone(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println("-------------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------------------------")
 	fmt.Println("Container ID:", id)
 	fmt.Println("Container Port:", port)
+	fmt.Println("---------------------------------------------------------------------------")
 
 	_, err = tools.FetchContainerData(newRepo, id, port)
 	if err != nil {

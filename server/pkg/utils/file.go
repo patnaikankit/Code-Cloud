@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/patnaikankit/Code-Cloud/server/pkg/models"
 )
@@ -51,7 +52,7 @@ func WriteFile(data ContainerMap) error {
 		return err
 	}
 
-	jsonFile, err := json.Marshal(absContextDirectory)
+	jsonFile, err := json.Marshal(data)
 	if err != nil {
 		fmt.Println("Error marshaling JSON:", err)
 		return err
@@ -93,23 +94,39 @@ func FetchContainerData(imageName string, conatinerID string, port int) (string,
 }
 
 // to fetch avaliable ports
-func FetchPort(port int) int {
+func FetchPort(startPort int) int {
+	port := startPort
+
 	for {
-		port++
 		var cmd *exec.Cmd
 
 		if runtime.GOOS == "windows" {
 			// Windows command to check if the port is in use
-			cmd = exec.Command("netstat", "-an", "|", "findstr", ":"+strconv.Itoa(port))
+			cmd = exec.Command("netstat", "-an")
 		} else {
-			// Unix for linux or mac command to check if the port is in use
+			// Unix command to check if the port is in use
 			cmd = exec.Command("lsof", "-i", "tcp:"+strconv.Itoa(port))
 		}
 
-		err := cmd.Run()
+		output, err := cmd.Output()
 		if err != nil {
+			// Error running the command, assume port is available
 			break
 		}
+
+		if runtime.GOOS == "windows" {
+			// Check if the port appears in the netstat output
+			if !strings.Contains(string(output), ":"+strconv.Itoa(port)) {
+				break
+			}
+		} else {
+			// If lsof returns output, port is in use
+			if len(output) == 0 {
+				break
+			}
+		}
+
+		port++
 	}
 
 	return port
