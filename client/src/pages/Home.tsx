@@ -71,6 +71,7 @@ const Home = () => {
                     <option value="React">React</option>
                     <option value="nextjs">Next.js</option>
                     <option value="django">Django</option>
+                    <option value="vue">Vue</option>
                 </select>
             </div>
             <button

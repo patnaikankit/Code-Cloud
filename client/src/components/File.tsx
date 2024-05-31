@@ -12,6 +12,7 @@ const File: React.FC<FileProps> = ({path}) => {
     const [folderHover, setFolderHover] = useState(false)
     const { getFile, sendMessage } = useWebsocket()
     const { removeFile } = useFiles()
+    const { activeFile } = useFiles()
 
     const deleteFile = () => {
         const cmd = {
@@ -28,8 +29,9 @@ const File: React.FC<FileProps> = ({path}) => {
         removeFile(path)
     }
 
+
     return(
-        <li className={`text-white flex justify-between cursor-pointer relative`}
+        <li className={`text-white flex justify-between cursor-pointer relative ${activeFile === path ? 'bg-gray-800' : 'bg-transparent'}`}
         onMouseEnter={() => {
             setFolderHover(true)
         }}

@@ -25,10 +25,6 @@ interface FileContextProps {
     removeFolder: (dir: string) => void
 }
 
-interface FileProviderProps {
-    children: React.ReactNode
-}
-
 const FileUtils = createContext<FileContextProps | undefined>(undefined)
 
 export const useFiles = () => {
@@ -39,6 +35,10 @@ export const useFiles = () => {
     }
 
     return context
+}
+
+interface FileProviderProps {
+    children: React.ReactNode
 }
 
 export const FileProvider: React.FC<FileProviderProps> = ({children}) => {

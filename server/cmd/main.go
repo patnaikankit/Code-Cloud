@@ -32,8 +32,14 @@ func main() {
 	router := gin.New()
 
 	// cors configuration
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	config := cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
 	router.Use(cors.New(config))
 
 	// WebSocket route

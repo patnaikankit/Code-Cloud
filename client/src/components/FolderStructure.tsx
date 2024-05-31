@@ -27,6 +27,7 @@ const FolderStructure = () => {
         setTimeout(() => {
             sendMessage(JSON.stringify(cmd))
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socket])
 
     const createFileOrFolder = (e: React.FormEvent<HTMLFormElement>) => {

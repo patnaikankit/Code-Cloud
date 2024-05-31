@@ -1,3 +1,5 @@
+// // context to manage websocket connection
+
 import React, { ReactNode, createContext, useContext, useState } from "react";
 import { useTerminal } from "./TerminalUtil";
 import { useFiles } from "./FileUtil";

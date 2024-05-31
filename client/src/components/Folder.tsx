@@ -95,15 +95,19 @@ const Folder: React.FC<Folderprops> = ({ path }) => {
             </div>
             {folderHover && (
                 <>
-                <BiPlus 
-                    className="text-white text-lg cursor-pointer absolute right-8" onClick={() => {
-                        setAddHover((e) => !e)
-                        setIsOpen(true)
+                <BiPlus
+                    className="text-white text-lg cursor-pointer absolute right-8 top-[0.2rem]"
+                    size={'0.8rem'}
+                    onClick={() => {
+                    setAddHover((a) => !a)
+                    setIsOpen(true)
                     }}
                 />
-                <MdDelete 
-                    className="text-white text-lg cursor-pointer absolute right-4 top-[0.2rem]" size={'0.8rem'} onClick={() => {
-                        deleteFolder()
+                <MdDelete
+                    className="text-white text-lg cursor-pointer absolute right-4 top-[0.2rem]"
+                    size={'0.8rem'}
+                    onClick={() => {
+                    deleteFolder()
                     }}
                 />
                 </>
