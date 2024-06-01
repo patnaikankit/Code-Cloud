@@ -1,68 +1,66 @@
 // context to manage terminal commands and its functionalities
 
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useState } from "react";
 
 interface CommandType {
-    command: string,
-    oldDir: string,
-    dir: string,
-    out: string
+    command: string;
+    oldDir: string;
+    dir: string;
+    out: string;
 }
 
 interface TerminalContextProps {
-    routes: string[]
-    setRoutes: (routes: string[]) => void
-    output: CommandType[]
-    setOutput: (output: CommandType, clear: boolean) => void
-    activeCommand: string
-    setActiveCommand: (command: string) => void
+    routes: string[];
+    setRoutes: (routes: string[]) => void;
+    output: CommandType[];
+    setOutput: (output: CommandType, clear: boolean) => void;
+    activeCommand: string;
+    setActiveCommand: (command: string) => void;
 }
 
-const TerminalContext = createContext<TerminalContextProps | undefined>(undefined)
+const TerminalContext = createContext<TerminalContextProps | undefined>(undefined);
 
 export const useTerminal = () => {
-    const context = useContext(TerminalContext)
+    const context = useContext(TerminalContext);
 
-    if(!context){
-        throw new Error('Usefiles must be within a FilesProvider')
+    if (!context) {
+        throw new Error('useTerminal must be within a TerminalProvider');
     }
 
-    return context
+    return context;
 }
 
-interface TerminalProviderProps{
-    children: React.ReactNode
+interface TerminalProviderProps {
+    children: React.ReactNode;
 }
 
-export const TerminalProvider: React.FC<TerminalProviderProps> = ({
-    children
-}) => {
+export const TerminalProvider: React.FC<TerminalProviderProps> = ({ children }) => {
     // to hold the current path
-    const [routes, setRoutes] = useState<string[]>(['app'])
+    const [routes, setRoutes] = useState<string[]>(['app']);
     // to hold all the terminal commands
-    const [output, setOutput] = useState<CommandType[]>([])
-    // to hold the current active directory
-    const [activeCommand, setActiveCommand] = useState<string>('')
+    const [output, setOutput] = useState<CommandType[]>([]);
+    // to hold the current active command
+    const [activeCommand, setActiveCommand] = useState<string>('');
 
     // updates the state with new routes
     const setRoutesFn = (routes: string[]) => {
-        setRoutes([...routes])
+        setRoutes([...routes]);
     }
 
     // update the state with new command output
     const setOutputFn = (output: CommandType, empty = false) => {
-        setActiveCommand('')
-        if(empty){
-            setOutput([])
-            return
+        setActiveCommand('');
+        if (empty) {
+            setOutput([]);
+            return;
         }
-        setOutput((e) => [...e, output])
+        setOutput((e) => [...e, output]);
         setRoutesFn(
             output.dir
-                .replace('\n', '')
-                .split('/')
+                .replace('\r\n', '')
+                .split('\\')
                 .filter((e) => e !== '')
-        )
+        );
     }
 
     return (
@@ -75,6 +73,8 @@ export const TerminalProvider: React.FC<TerminalProviderProps> = ({
                 activeCommand,
                 setActiveCommand
             }}
-        >{children}</TerminalContext.Provider>
-    )
+        >
+            {children}
+        </TerminalContext.Provider>
+    );
 }

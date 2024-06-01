@@ -69,9 +69,9 @@ const Home = () => {
                     className="h-10 bg-gray-300 px-2 outline-none rounded"
                 >
                     <option value="React">React</option>
-                    <option value="nextjs">Next.js</option>
-                    <option value="django">Django</option>
                     <option value="vue">Vue</option>
+                    <option value="vue">Angular</option>
+                    <option value="nextjs">Next.js</option>
                 </select>
             </div>
             <button

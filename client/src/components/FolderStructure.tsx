@@ -26,7 +26,7 @@ const FolderStructure = () => {
         }
         setTimeout(() => {
             sendMessage(JSON.stringify(cmd))
-        })
+        }, 200)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socket])
 

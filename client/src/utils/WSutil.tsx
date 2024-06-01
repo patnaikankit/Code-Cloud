@@ -1,5 +1,3 @@
-// // context to manage websocket connection
-
 import React, { ReactNode, createContext, useContext, useState } from "react";
 import { useTerminal } from "./TerminalUtil";
 import { useFiles } from "./FileUtil";
@@ -28,16 +26,16 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
-    // to hold websocket object 
     const [socket, setSocketState] = useState<WebSocket | null>(null);
     const { routes, activeCommand, setOutput } = useTerminal();
     const { setFiles, setFileData } = useFiles();
 
-    // establish new socket connection
     const setSocketFn = (id: string) => {
         if (socket) {
             socket.close();
         }
+
+        console.log(id);
 
         const newSocket = new WebSocket(`ws://${id}.localhost:5000/ws`);
 
@@ -56,15 +54,21 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         newSocket.addEventListener('message', (e) => {
             const response = JSON.parse(e.data);
             console.log(response);
-            
+
+            if (response.error) {
+                console.error(`Error: ${response.error}`);
+            }
+
             if (response.type === 'files') {
+                const dir = response.dir ? response.dir.split('\\app\\')[1] : '';
                 setFiles(
-                    response.dir.split('/app/')[1] || '',
+                    dir || '',
                     response.out.split('\n').filter((s: string) => s !== '')
                 );
             } else if (response.type === 'file') {
+                const dir = response.dir ? response.dir.split('\\app\\')[1] : '';
                 setFileData(
-                    (response.dir.split('/app/')[1] || '') + '/' + response.isFile,
+                    (dir || '') + '\\' + response.isFile,
                     response.out
                 );
             } else if (response.type === 'command') {
@@ -73,11 +77,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
                         dir: '/' + routes.join('/'),
                         oldDir: response.oldDir,
                         command: response.command,
-                        out: response.out + response.error
+                        out: response.out + '\nError: ' + response.error
                     }, false);
                 } else {
                     setOutput({
-                        dir: response.dir,
+                        dir: response.dir ? response.dir : '/' + routes.join('/'),
                         oldDir: response.oldDir,
                         command: response.command,
                         out: response.out
@@ -95,14 +99,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
     }
 
-    // construct and send a command to get file
     const getFile = (path: string) => {
-        const filterPath = path.split('/').filter((e) => e !== '');
-        const removeFile = filterPath.slice(0, -1).join('/');
+        const filterPath = path.split('\\').filter((e) => e !== '');
+        const removeFile = filterPath.slice(0, -1).join('\\');
         const fileName = filterPath.pop();
         const cmd = {
-            dir: '/app/' + removeFile,
-            command: 'cat ' + fileName,
+            dir: 'C:\\app\\' + removeFile,
+            command: 'type ' + fileName,
             type: 'file',
             isFile: fileName
         };
@@ -111,13 +114,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
     }
 
-    // construct and send a command to save a file
     const saveFile = (path: string, data: string) => {
-        const filterPath = path.split('/').filter((e) => e !== '');
-        const removeFile = filterPath.slice(0, -1).join('/');
+        const filterPath = path.split('\\').filter((e) => e !== '');
+        const removeFile = filterPath.slice(0, -1).join('\\');
         const fileName = filterPath.pop();
         const cmd = {
-            dir: '/app/' + removeFile,
+            dir: 'C:\\app\\' + removeFile,
             command: '',
             type: 'file',
             isFile: fileName,
@@ -129,7 +131,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
     }
 
-    // execute the active command
     const execCommand = () => {
         if (activeCommand === '') {
             return;

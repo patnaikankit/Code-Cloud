@@ -1,4 +1,3 @@
-// upgrade http to ws and manage communication with client
 package tools
 
 import (
@@ -21,7 +20,7 @@ func EstablishWS(ctx *gin.Context, upgrader *websocket.Upgrader) bool {
 	imageID := strings.Split(ctx.Request.Host, ".")[0]
 
 	containerData, err := ReadContainerData()
-	if err != nil {
+	if (err != nil) || (len(containerData) == 0) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Error reading container data!",
 			"error":   err.Error(),

@@ -25,13 +25,10 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	var timer time.Timer
-	timer.C = make(<-chan time.Time)
 	gin.SetMode(gin.ReleaseMode)
-
 	router := gin.New()
 
-	// cors configuration
+	// CORS configuration
 	config := cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -53,10 +50,9 @@ func main() {
 	})
 
 	// Default route for HTTP proxying
-	router.NoRoute(func(ctx *gin.Context) {
-		handleHTTPProxy(ctx)
-	})
+	router.NoRoute(handleHTTPProxy)
 
+	// Initialize additional routes
 	routes.Server(router)
 
 	fmt.Println("Server started at port 5000")

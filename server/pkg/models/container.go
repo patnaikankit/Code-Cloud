@@ -1,7 +1,7 @@
 package models
 
 type ContainerInfo struct {
-	ContainerID   string `json:"containerID"`
-	ContainerName string `json:"containername"`
+	ContainerID   string `json:"containerId"`
+	ContainerName string `json:"containerName"`
 	Port          int    `json:"port"`
 }
